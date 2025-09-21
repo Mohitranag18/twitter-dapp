@@ -81,29 +81,6 @@ Before running this project, make sure you have:
 4. **Interact**: Like tweets from other users
 5. **View Feed**: See all your tweets in your personal feed
 
-## 🏗️ Project Structure
-
-```
-twitter-dapp/
-├── public/                 # Static assets
-├── src/
-│   ├── components/        # React components
-│   │   ├── ErrorBoundary.js
-│   │   ├── ProfileSetup.js
-│   │   ├── TweetComposer.js
-│   │   ├── TweetFeed.js
-│   │   ├── UserProfile.js
-│   │   └── WalletConnect.js
-│   ├── contracts/         # Smart contract configuration
-│   │   └── config.js
-│   ├── hooks/            # Custom React hooks
-│   │   └── useWeb3.js
-│   ├── App.js            # Main application component
-│   └── index.js          # Application entry point
-├── package.json          # Dependencies and scripts
-└── README.md            # Project documentation
-```
-
 ## 🔧 Smart Contracts
 
 The application uses two main smart contracts:
@@ -125,71 +102,6 @@ The application uses two main smart contracts:
 - **RPC URL**: `https://sepolia.infura.io/v3/`
 - **Block Explorer**: [Sepolia Etherscan](https://sepolia.etherscan.io/)
 
-## 🚀 Deployment
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-This creates a `build` folder with optimized production files.
-
-### Deploy to GitHub Pages
-
-1. Install gh-pages package:
-   ```bash
-   npm install --save-dev gh-pages
-   ```
-
-2. Add deployment scripts to `package.json`:
-   ```json
-   "scripts": {
-     "predeploy": "npm run build",
-     "deploy": "gh-pages -d build"
-   }
-   ```
-
-3. Deploy to GitHub Pages:
-   ```bash
-   npm run deploy
-   ```
-
-### Deploy to Vercel
-
-1. Install Vercel CLI:
-   ```bash
-   npm i -g vercel
-   ```
-
-2. Deploy:
-   ```bash
-   vercel
-   ```
-
-### Deploy to Netlify
-
-1. Build the project:
-   ```bash
-   npm run build
-   ```
-
-2. Drag and drop the `build` folder to [Netlify](https://netlify.com)
-
-## 🧪 Testing
-
-Run the test suite:
-
-```bash
-npm test
-```
-
-Run tests in watch mode:
-
-```bash
-npm test -- --watch
-```
-
 ## 📝 Available Scripts
 
 - `npm start` - Start development server
@@ -203,18 +115,8 @@ npm test -- --watch
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+5. Open a Pull Request.
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Ethers.js](https://docs.ethers.io/) for Web3 functionality
-- [MetaMask](https://metamask.io/) for wallet integration
-- [Tailwind CSS](https://tailwindcss.com/) for styling
-- [React](https://reactjs.org/) for the frontend framework
 
 ## 📞 Support
 
