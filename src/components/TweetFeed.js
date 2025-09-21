@@ -198,7 +198,7 @@ const TweetFeed = ({ tweets, twitterContract, currentUser }) => {
 
   return (
     <div>
-      <h3 className="text-blue-500 text-2xl font-bold mb-6">
+      <h3 className="text-white text-2xl font-bold mb-6">
         🐦 Your Tweets ({feedTweets.length})
       </h3>
       
