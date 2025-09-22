@@ -1,5 +1,6 @@
 // src/components/UserDiscovery.js
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../utils/supabase';
 
 const UserDiscovery = ({ profileContract, currentUser, onFollowUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -7,6 +8,9 @@ const UserDiscovery = ({ profileContract, currentUser, onFollowUser }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [followedAddresses, setFollowedAddresses] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [publicProfiles, setPublicProfiles] = useState([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isMakingPublic, setIsMakingPublic] = useState(false);
 
   // Load followed addresses and discovered users
   useEffect(() => {
@@ -19,6 +23,9 @@ const UserDiscovery = ({ profileContract, currentUser, onFollowUser }) => {
     if (discovered) {
       setAllUsers(JSON.parse(discovered));
     }
+
+    // Load public profiles
+    loadPublicProfiles();
   }, []);
 
   // Save discovered users to localStorage
@@ -104,12 +111,102 @@ const UserDiscovery = ({ profileContract, currentUser, onFollowUser }) => {
     return followedAddresses.includes(address.toLowerCase());
   };
 
+  // Load public profiles from Supabase
+  const loadPublicProfiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('public_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading public profiles:', error);
+        return;
+      }
+
+      setPublicProfiles(data || []);
+    } catch (err) {
+      console.error('Error loading public profiles:', err);
+    }
+  };
+
+  // Make profile public
+  const makeProfilePublic = async () => {
+    if (!currentUser) return;
+
+    setIsMakingPublic(true);
+    try {
+      // Check if profile is already public
+      const { data: existing } = await supabase
+        .from('public_profiles')
+        .select('id')
+        .eq('address', currentUser.toLowerCase())
+        .single();
+
+      if (existing) {
+        alert('Your profile is already public!');
+        setShowConfirmDialog(false);
+        setIsMakingPublic(false);
+        return;
+      }
+
+      // Get user profile data
+      const profile = await profileContract.getProfile(currentUser);
+      const displayName = profile[0] || 'Anonymous';
+      const bio = profile[1] || '';
+
+      // Insert into Supabase
+      const { error } = await supabase
+        .from('public_profiles')
+        .insert([
+          {
+            address: currentUser.toLowerCase(),
+            display_name: displayName,
+            bio: bio,
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (error) {
+        console.error('Error making profile public:', error);
+        alert('Failed to make profile public. Please try again.');
+      } else {
+        alert('Your profile is now public! Other users can find and follow you.');
+        loadPublicProfiles(); // Refresh the list
+      }
+    } catch (err) {
+      console.error('Error making profile public:', err);
+      alert('Failed to make profile public. Please try again.');
+    } finally {
+      setShowConfirmDialog(false);
+      setIsMakingPublic(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
       <h3 className="text-gray-900 text-xl font-bold mb-6 flex items-center gap-2">
         <i className="bi bi-people-fill text-blue-600"></i>
         Social Network
       </h3>
+
+      {/* Make Profile Public Section */}
+      <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="text-lg font-semibold text-blue-900 mb-3 flex items-center gap-2">
+          <i className="bi bi-globe-americas"></i>
+          Make Your Profile Public
+        </h4>
+        <p className="text-blue-800 text-sm mb-4">
+          Make your profile visible to all users on the platform. Other users can discover and follow you without needing your wallet address.
+        </p>
+        <button
+          onClick={() => setShowConfirmDialog(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+        >
+          <i className="bi bi-eye-fill"></i>
+          Make Profile Public
+        </button>
+      </div>
 
       {/* Search Section */}
       <div className="mb-6">
@@ -181,6 +278,104 @@ const UserDiscovery = ({ profileContract, currentUser, onFollowUser }) => {
                 )}
               </div>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <i className="bi bi-exclamation-triangle-fill text-yellow-500"></i>
+              Confirm Public Profile
+            </h3>
+            <p className="text-gray-700 mb-4">
+              Are you sure you want to make your profile public? This will allow all users on the platform to discover and follow you.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors"
+                disabled={isMakingPublic}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={makeProfilePublic}
+                disabled={isMakingPublic}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:bg-blue-400"
+              >
+                {isMakingPublic ? (
+                  <>
+                    <i className="bi bi-hourglass-split mr-2"></i>
+                    Making Public...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-check-circle mr-2"></i>
+                    Confirm
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Public Profiles Section */}
+      <div className="mb-6">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <i className="bi bi-star-fill text-yellow-500"></i>
+          Public Profiles ({publicProfiles.length})
+        </h4>
+        {publicProfiles.length > 0 ? (
+          <div className="space-y-3">
+            {publicProfiles.map((profile, index) => (
+              <div key={index} className="border border-yellow-200 bg-yellow-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center text-white text-sm font-bold">
+                      {profile.display_name?.charAt(0)?.toUpperCase() || '👤'}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{profile.display_name}</p>
+                      <p className="text-sm text-gray-500 font-mono">{formatAddress(profile.address)}</p>
+                      {profile.bio && <p className="text-sm text-gray-600">{profile.bio}</p>}
+                    </div>
+                  </div>
+
+                  {profile.address.toLowerCase() !== currentUser?.toLowerCase() && (
+                    <button
+                      onClick={() => isFollowing(profile.address) ? handleUnfollow(profile.address) : handleFollow(profile.address)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isFollowing(profile.address)
+                          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                      }`}
+                    >
+                      {isFollowing(profile.address) ? (
+                        <>
+                          <i className="bi bi-check-circle-fill mr-1"></i>
+                          Following
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-plus-circle mr-1"></i>
+                          Follow
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+            <i className="bi bi-star text-4xl mb-3 text-gray-300"></i>
+            <p>No public profiles yet</p>
+            <p className="text-sm">Be the first to make your profile public!</p>
           </div>
         )}
       </div>
