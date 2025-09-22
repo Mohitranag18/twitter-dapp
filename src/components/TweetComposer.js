@@ -78,49 +78,49 @@ const TweetComposer = ({ twitterContract, onTweetCreated, currentUser }) => {
   const isOverLimit = remainingChars < 0;
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-      <h3 className="text-blue-500 text-xl font-bold mb-4">✨ What's happening?</h3>
+    <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+      <h3 className="text-gray-900 text-xl font-bold mb-4">What's happening?</h3>
       
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <textarea
             value={tweetContent}
             onChange={(e) => setTweetContent(e.target.value)}
-            placeholder="Share your thoughts..."
-            rows={3}
+            placeholder="Share your thoughts with the world..."
+            rows={4}
             disabled={isPosting}
-            className={`w-full p-4 border-2 rounded-xl text-base resize-vertical min-h-[80px] transition-colors focus:outline-none ${
+            className={`w-full p-4 border-2 rounded-xl text-base resize-none focus:outline-none transition-colors ${
               isOverLimit 
-                ? 'border-red-500 focus:border-red-600' 
-                : 'border-gray-200 focus:border-blue-500'
+                ? 'border-red-300 focus:border-red-400' 
+                : 'border-gray-200 focus:border-blue-400'
             } disabled:opacity-50`}
           />
           
           <div className="flex justify-between items-center mt-3">
-            <div className={`text-sm ${isOverLimit ? 'text-red-500 font-bold' : 'text-gray-600'}`}>
+            <div className={`text-sm ${isOverLimit ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
               {remainingChars} characters remaining
             </div>
             
             <button 
               type="submit" 
               disabled={isPosting || !tweetContent.trim() || isOverLimit}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+              className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-2 rounded-full font-semibold transition-colors"
             >
-              {isPosting ? 'Posting...' : '🐦 Tweet'}
+              {isPosting ? 'Posting...' : 'Tweet'}
             </button>
           </div>
         </div>
         
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-            <p className="text-red-600">❌ {error}</p>
+            <p className="text-red-600 text-sm">❌ {error}</p>
           </div>
         )}
       </form>
       
       <div className="bg-blue-50 rounded-lg p-3 mt-4">
         <p className="text-blue-700 text-sm">
-          �� Each tweet is stored permanently on the blockchain
+          🌍 Your tweet will be visible to all users on the global feed
         </p>
       </div>
     </div>

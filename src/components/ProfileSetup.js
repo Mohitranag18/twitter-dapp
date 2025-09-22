@@ -147,12 +147,18 @@ const ProfileSetup = ({ profileContract, onProfileCreated }) => {
         
         <div className="bg-blue-50 rounded-lg p-4 mt-6">
           <p className="text-blue-700 text-sm">
-            <strong>💡 Note:</strong> Creating a profile requires a blockchain transaction and will cost some gas fees.
+            <strong className="flex items-center gap-1">
+              <i className="bi bi-lightbulb-fill text-yellow-500"></i>
+              Note:
+            </strong> Creating a profile requires a blockchain transaction and will cost some gas fees.
           </p>
         </div>
         
         <div className="mt-8 pt-6 border-t border-gray-200">
-          <h4 className="text-blue-500 font-semibold mb-4">📋 Preview:</h4>
+          <h4 className="text-blue-500 font-semibold mb-4 flex items-center gap-2">
+            <i className="bi bi-eye-fill"></i>
+            Preview:
+          </h4>
           <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border-2 border-dashed border-blue-300">
             <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
               {displayName ? displayName.charAt(0).toUpperCase() : '👤'}
@@ -169,7 +175,10 @@ const ProfileSetup = ({ profileContract, onProfileCreated }) => {
         </div>
         
         <div className="mt-6 bg-gray-50 rounded-lg p-4">
-          <h4 className="font-semibold text-gray-800 mb-3">📋 Requirements:</h4>
+          <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <i className="bi bi-list-check"></i>
+            Requirements:
+          </h4>
           <ul className="space-y-2 text-sm text-gray-700">
             <li className="flex items-center gap-2">
               <span className="text-green-500">✅</span>

@@ -105,10 +105,10 @@ const TweetItem = ({ tweet, twitterContract, currentUser, onLikeUpdate }) => {
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-lg transition-transform duration-300 hover:-translate-y-1 animate-fadeIn">
+    <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-blue-500 font-medium">
+          <span className="font-mono text-blue-500 font-medium text-sm">
             {formatAddress(tweet?.author)}
           </span>
           {tweet?.author && tweet.author.toLowerCase() === currentUser?.toLowerCase() && (
@@ -133,16 +133,17 @@ const TweetItem = ({ tweet, twitterContract, currentUser, onLikeUpdate }) => {
           <button
             onClick={handleLike}
             disabled={isLiking || !tweet?.author}
-            className="bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 px-3 py-2 rounded-lg text-sm transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-300 px-3 py-2 rounded-lg text-sm transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            ❤️ {Number(tweet?.likes) || 0}
+            <i className="bi bi-heart-fill text-red-500"></i>
+            <span>{Number(tweet?.likes) || 0}</span>
           </button>
           
           {Number(tweet?.likes) > 0 && (
             <button
               onClick={handleUnlike}
               disabled={isLiking || !tweet?.author}
-              className="bg-white hover:bg-red-50 border border-gray-200 hover:border-red-300 px-3 py-2 rounded-lg text-sm transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-2 rounded-lg text-sm transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               💔 Unlike
             </button>
@@ -182,11 +183,10 @@ const TweetFeed = ({ tweets, twitterContract, currentUser }) => {
 
   if (!feedTweets || feedTweets.length === 0) {
     return (
-      <div>
-        <div className="text-center py-12 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg">
-          <h3 className="text-gray-500 text-xl font-semibold mb-3">📝 No tweets yet</h3>
-          <p className="text-gray-500">Be the first to share your thoughts!</p>
-        </div>
+      <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center shadow-sm">
+        <div className="text-6xl mb-4">🌍</div>
+        <h3 className="text-gray-900 text-xl font-semibold mb-2">No tweets in global feed</h3>
+        <p className="text-gray-500">Be the first to share your thoughts on the blockchain!</p>
       </div>
     );
   }
@@ -197,22 +197,16 @@ const TweetFeed = ({ tweets, twitterContract, currentUser }) => {
   );
 
   return (
-    <div>
-      <h3 className="text-white text-2xl font-bold mb-6">
-        🐦 Your Tweets ({feedTweets.length})
-      </h3>
-      
-      <div className="space-y-5">
-        {sortedTweets.map((tweet, index) => (
-          <TweetItem
-            key={`${tweet.author}-${tweet.id}-${index}`}
-            tweet={tweet}
-            twitterContract={twitterContract}
-            currentUser={currentUser}
-            onLikeUpdate={handleLikeUpdate}
-          />
-        ))}
-      </div>
+    <div className="space-y-4">
+      {sortedTweets.map((tweet, index) => (
+        <TweetItem
+          key={`${tweet.author}-${tweet.id}-${index}`}
+          tweet={tweet}
+          twitterContract={twitterContract}
+          currentUser={currentUser}
+          onLikeUpdate={handleLikeUpdate}
+        />
+      ))}
     </div>
   );
 };
