@@ -92,19 +92,51 @@ const UserDiscovery = ({ profileContract, currentUser, onFollowUser }) => {
     }
   };
 
-  const handleFollow = (address) => {
+  const handleFollow = async (address) => {
     if (!followedAddresses.includes(address.toLowerCase())) {
       const updated = [...followedAddresses, address.toLowerCase()];
       setFollowedAddresses(updated);
       localStorage.setItem('followedAddresses', JSON.stringify(updated));
+
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('followedAddressesChanged'));
+
       onFollowUser && onFollowUser(address);
+
+      // Record follow relationship in Supabase
+      try {
+        await supabase
+          .from('followers')
+          .insert([
+            {
+              follower_address: currentUser.toLowerCase(),
+              following_address: address.toLowerCase()
+            }
+          ]);
+      } catch (err) {
+        console.error('Error recording follow relationship:', err);
+      }
     }
   };
 
-  const handleUnfollow = (address) => {
+  const handleUnfollow = async (address) => {
     const updated = followedAddresses.filter(addr => addr !== address.toLowerCase());
     setFollowedAddresses(updated);
     localStorage.setItem('followedAddresses', JSON.stringify(updated));
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('followedAddressesChanged'));
+
+    // Remove follow relationship from Supabase
+    try {
+      await supabase
+        .from('followers')
+        .delete()
+        .eq('follower_address', currentUser.toLowerCase())
+        .eq('following_address', address.toLowerCase());
+    } catch (err) {
+      console.error('Error removing follow relationship:', err);
+    }
   };
 
   const isFollowing = (address) => {

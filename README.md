@@ -1,4 +1,4 @@
-# 🐦 Decentralized Twitter dApp
+# 🐦 Dwitter dApp
 
 A fully decentralized Twitter-like social media application built on the Ethereum blockchain using React and Web3 technologies. Users can create profiles, post tweets, and interact with content directly on the blockchain without any central authority.
 
@@ -49,8 +49,8 @@ Before running this project, make sure you have:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/twitter-dapp.git
-   cd twitter-dapp
+   git clone https://github.com/yourusername/dwitter-dapp.git
+   cd dwitter-dapp
    ```
 
 2. **Install dependencies**

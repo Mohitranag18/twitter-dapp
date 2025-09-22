@@ -1,37 +1,143 @@
 // src/components/UserProfile.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { supabase } from '../utils/supabase';
 
 const UserProfile = ({ profile, account, twitterContract, tweetsCount }) => {
   const [totalLikes, setTotalLikes] = useState(0);
   const [loading, setLoading] = useState(false);
   const [followedAddresses, setFollowedAddresses] = useState([]);
   const [newAddress, setNewAddress] = useState('');
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
 
-  // Load followed addresses from localStorage
+  // Fetch followers and following counts from Supabase
+  const fetchFollowStats = useCallback(async () => {
+    if (!account) return;
+
+    try {
+      console.log('Fetching follow stats for account:', account);
+
+      // Get following count (users this account follows)
+      const { error: followingError, count: following } = await supabase
+        .from('followers')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_address', account.toLowerCase());
+
+      if (followingError) {
+        console.error('Error fetching following count:', followingError);
+      }
+
+      // Get followers count (users who follow this account)
+      const { error: followersError, count: followers } = await supabase
+        .from('followers')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_address', account.toLowerCase());
+
+      if (followersError) {
+        console.error('Error fetching followers count:', followersError);
+      }
+
+      console.log('Follow stats:', { following: following || 0, followers: followers || 0 });
+
+      setFollowingCount(following || 0);
+      setFollowersCount(followers || 0);
+    } catch (err) {
+      console.error('Error fetching follow stats:', err);
+      // Fallback to localStorage count for following
+      setFollowingCount(followedAddresses.length);
+    }
+  }, [account, followedAddresses.length]);
+
+  // Load followed addresses from localStorage and fetch follow stats
   useEffect(() => {
     const saved = localStorage.getItem('followedAddresses');
     if (saved) {
-      setFollowedAddresses(JSON.parse(saved));
+      const addresses = JSON.parse(saved);
+      setFollowedAddresses(addresses);
+      setFollowingCount(addresses.length);
     }
-  }, []);
+
+    // Fetch follow stats from Supabase
+    fetchFollowStats();
+
+    // Set up periodic refresh every 30 seconds
+    const interval = setInterval(fetchFollowStats, 30000);
+
+    // Listen for storage changes (when follows happen in other components)
+    const handleStorageChange = (e) => {
+      if (e.key === 'followedAddresses') {
+        fetchFollowStats();
+      }
+    };
+
+    // Listen for custom follow events
+    const handleFollowChange = () => {
+      fetchFollowStats();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('followedAddressesChanged', handleFollowChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('followedAddressesChanged', handleFollowChange);
+    };
+  }, [account, fetchFollowStats]);
 
   // Save followed addresses to localStorage
   const saveFollowedAddresses = (addresses) => {
     localStorage.setItem('followedAddresses', JSON.stringify(addresses));
     setFollowedAddresses(addresses);
+    setFollowingCount(addresses.length);
   };
 
-  const addFollowedAddress = () => {
+  const addFollowedAddress = async () => {
     if (newAddress && !followedAddresses.includes(newAddress.toLowerCase())) {
       const updated = [...followedAddresses, newAddress.toLowerCase()];
       saveFollowedAddresses(updated);
       setNewAddress('');
+
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new CustomEvent('followedAddressesChanged'));
+
+      // Record follow relationship in Supabase
+      try {
+        await supabase
+          .from('followers')
+          .insert([
+            {
+              follower_address: account.toLowerCase(),
+              following_address: newAddress.toLowerCase()
+            }
+          ]);
+        // Refresh follow stats
+        fetchFollowStats();
+      } catch (err) {
+        console.error('Error recording follow relationship:', err);
+      }
     }
   };
 
-  const removeFollowedAddress = (address) => {
+  const removeFollowedAddress = async (address) => {
     const updated = followedAddresses.filter(addr => addr !== address);
     saveFollowedAddresses(updated);
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('followedAddressesChanged'));
+
+    // Remove follow relationship from Supabase
+    try {
+      await supabase
+        .from('followers')
+        .delete()
+        .eq('follower_address', account.toLowerCase())
+        .eq('following_address', address.toLowerCase());
+      // Refresh follow stats
+      fetchFollowStats();
+    } catch (err) {
+      console.error('Error removing follow relationship:', err);
+    }
   };
 
   useEffect(() => {
@@ -106,7 +212,7 @@ const UserProfile = ({ profile, account, twitterContract, tweetsCount }) => {
         )}
       </div>
       
-      <div className="flex justify-around py-4 border-t border-b border-gray-200 mb-4">
+      <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-gray-200 mb-4">
         <div className="text-center">
           <div className="text-xl font-bold text-blue-500">{tweetsCount}</div>
           <div className="text-gray-500 text-xs">Tweets</div>
@@ -117,6 +223,16 @@ const UserProfile = ({ profile, account, twitterContract, tweetsCount }) => {
             {loading ? '...' : totalLikes}
           </div>
           <div className="text-gray-500 text-xs">Likes</div>
+        </div>
+
+        <div className="text-center">
+          <div className="text-xl font-bold text-green-500">{followingCount}</div>
+          <div className="text-gray-500 text-xs">Following</div>
+        </div>
+
+        <div className="text-center">
+          <div className="text-xl font-bold text-purple-500">{followersCount}</div>
+          <div className="text-gray-500 text-xs">Followers</div>
         </div>
       </div>
       

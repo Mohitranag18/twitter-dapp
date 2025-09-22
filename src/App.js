@@ -74,28 +74,16 @@ function App() {
     checkRegistration();
   }, [profileContract, account]);
 
-  // Load tweets when user is registered - global feed from all users
+  // Load tweets when user is registered - feed from followed users only
   useEffect(() => {
-    const loadGlobalTweets = async () => {
+    const loadFollowedTweets = async () => {
       if (twitterContract && isRegistered && account) {
         try {
-          // For a global feed, we need to get tweets from all users
-          // Since the contract doesn't have a global getAllTweets function,
-          // we'll aggregate tweets from multiple users
+          // Load tweets from followed users only
           
           // Start with current user's tweets
           const userTweets = await twitterContract.getAllTweets(account);
           let allTweets = [...userTweets];
-          
-          // In a real Twitter-like app, you'd have a "following" system
-          // For now, we'll try to get tweets from some common addresses
-          // This is a temporary solution until the contract is updated with global feed
-          
-          // You can add known user addresses here to show their tweets
-          // const knownUserAddresses = [
-          //   // Add addresses of users who have tweeted
-          //   // For example: "0x1234...abcd"
-          // ];
           
           // Get followed addresses from localStorage
           const followedAddresses = JSON.parse(localStorage.getItem('followedAddresses') || '[]');
@@ -113,7 +101,7 @@ function App() {
             }
           }
           
-          console.log('All tweets from users:', allTweets);
+          console.log('All tweets from followed users:', allTweets);
           
           // Convert contract array format to object format
           const convertedTweets = allTweets.map(convertContractTweetToObject).filter(Boolean);
@@ -142,7 +130,7 @@ function App() {
       }
     };
 
-    loadGlobalTweets();
+    loadFollowedTweets();
   }, [twitterContract, isRegistered, account]);
 
   // Real-time updates using contract event listeners
@@ -272,8 +260,8 @@ function App() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-md mx-auto pt-20 px-4">
           <div className="text-center mb-8">
-            <i className="bi bi-twitter text-blue-500 text-4xl font-bold mb-2"></i>
-            <h2 className="text-gray-900 text-2xl font-bold">Decentralized Twitter</h2>
+            <img src="/logos/D__1_-removebg-preview.png" alt="Dwitter Logo" className="h-16 w-16 mx-auto mb-2" />
+            <h2 className="text-gray-900 text-2xl font-bold">Dwitter</h2>
             <p className="text-gray-600 mt-2">Connect your wallet to start tweeting on the blockchain</p>
           </div>
           <WalletConnect 
@@ -302,7 +290,7 @@ function App() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-md mx-auto pt-20 px-4">
           <div className="text-center mb-8">
-            <i className="bi bi-twitter text-blue-500 text-4xl font-bold mb-2"></i>
+            <img src="/logos/D__1_-removebg-preview.png" alt="Dwitter Logo" className="h-16 w-16 mx-auto mb-2" />
             <h2 className="text-gray-900 text-2xl font-bold">Welcome</h2>
             <p className="text-gray-600 mt-2">Connected: {account.slice(0, 6)}...{account.slice(-4)}</p>
           </div>
@@ -329,8 +317,8 @@ function App() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="text-blue-500 text-xl font-bold flex items-center gap-2">
-            <i className="bi bi-twitter"></i>
-            Decentralized Twitter
+            <img src="/logos/D__1_-removebg-preview.png" alt="Dwitter Logo" className="h-8 w-8" />
+            Dwitter
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-gray-700 text-sm">Welcome, {userProfile?.displayName}!</span>
@@ -516,59 +504,6 @@ function App() {
             </div>
           )}
         </main>
-
-        {/* Right Sidebar - Hidden on mobile and tablet - Only show on home */}
-        {currentSection === 'home' && (
-          <aside className="hidden lg:block w-96 p-4 min-h-screen space-y-6">
-            <UserDiscovery 
-              profileContract={profileContract}
-              currentUser={account}
-              onFollowUser={() => {
-                // Trigger tweet reload when following new users
-                const loadTweets = async () => {
-                  if (twitterContract && account) {
-                    try {
-                      const userTweets = await twitterContract.getAllTweets(account);
-                      let allTweets = [...userTweets];
-                      
-                      const followedAddresses = JSON.parse(localStorage.getItem('followedAddresses') || '[]');
-                      
-                      for (const userAddress of followedAddresses) {
-                        try {
-                          if (userAddress.toLowerCase() !== account.toLowerCase()) {
-                            const tweets = await twitterContract.getAllTweets(userAddress);
-                            allTweets = [...allTweets, ...tweets];
-                          }
-                        } catch (err) {
-                          console.log(`Could not get tweets for address: ${userAddress}`);
-                        }
-                      }
-                      
-                      const convertedTweets = allTweets.map(convertContractTweetToObject).filter(Boolean);
-                      
-                      const uniqueTweets = convertedTweets.filter((tweet, index, self) => 
-                        index === self.findIndex(t => 
-                          t.content === tweet.content && 
-                          t.author.toLowerCase() === tweet.author.toLowerCase() &&
-                          t.timestamp === tweet.timestamp
-                        )
-                      );
-                      
-                      const sortedTweets = uniqueTweets.sort((a, b) => 
-                        Number(b.timestamp) - Number(a.timestamp)
-                      );
-                      
-                      setTweets(sortedTweets);
-                    } catch (err) {
-                      console.error('Error reloading tweets:', err);
-                    }
-                  }
-                };
-                loadTweets();
-              }}
-            />
-          </aside>
-        )}
       </div>
 
       {/* Mobile Bottom Navigation */}
